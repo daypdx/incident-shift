@@ -1,0 +1,400 @@
+{
+  "schemaVersion": "1.1",
+  "artifactFamily": "sign-in-timeline",
+  "unscored": false,
+  "id": "ID-001",
+  "version": 1,
+  "title": "Impossible Travel?",
+  "subtitle": "A cloud sign-in alert looks alarming, but location alone is not a verdict.",
+  "track": "security-operations",
+  "difficulty": "technician",
+  "estimatedMinutes": 7,
+  "stability": "review-annually",
+  "contentReview": {
+    "lastReviewed": "2026-08-17",
+    "reviewBy": "2027-08-17",
+    "sourceUrls": [
+      "https://support.google.com/a/answer/7102416",
+      "https://attack.mitre.org/techniques/T1078/",
+      "https://www.cisa.gov/audiences/small-and-medium-businesses/secure-your-business/require-multifactor-authentication"
+    ],
+    "reviewNotes": "Synthetic alert-triage case. It teaches that valid-account abuse is important while location anomalies can have benign explanations such as approved VPN egress."
+  },
+  "playerRole": "Junior security analyst monitoring the fictional Northstar Learning Cooperative",
+  "authorityScope": {
+    "allowed": [
+      "Review the supplied synthetic alert and sign-in evidence",
+      "Contact the user through the approved internal channel",
+      "Compare the event with the approved VPN inventory",
+      "Close a confirmed benign alert with evidence"
+    ],
+    "requiresEscalation": [
+      "Revoke active sessions",
+      "Disable an account",
+      "Reset credentials",
+      "Search additional systems outside the supplied case scope"
+    ],
+    "prohibited": [
+      "Declare compromise from geolocation alone",
+      "Ignore the alert without documenting evidence",
+      "Contact the user through information contained only in the suspicious event"
+    ]
+  },
+  "learningObjectives": [
+    "Treat unusual location as a lead rather than proof of compromise",
+    "Verify user activity through an approved independent channel",
+    "Correlate device, MFA, network, and VPN evidence",
+    "Close or escalate an alert using stated confidence and supporting facts"
+  ],
+  "briefing": {
+    "timestamp": "10:42",
+    "channel": "alert",
+    "requester": "Cloud identity monitoring",
+    "summary": "A successful sign-in for Jordan Lee appears in Portland at 10:14 and in Chicago at 10:32. The alert labels the second event suspicious because the locations are not consistent with normal travel.",
+    "initialEvidenceIds": ["identity-alert"]
+  },
+  "evidence": [
+    {
+      "id": "identity-alert",
+      "label": "Identity alert",
+      "type": "log",
+      "provenance": "system-generated",
+      "content": "10:14 — Portland region — successful sign-in\n10:32 — Chicago region — successful sign-in\nRule: unusual travel pattern\nRisk state: investigation required",
+      "coachExplanation": "The alert identifies behavior worth investigating. It does not independently establish malicious access."
+    },
+    {
+      "id": "user-confirmation",
+      "label": "Approved-channel user confirmation",
+      "type": "chat",
+      "provenance": "reported",
+      "content": "Jordan confirms signing in at both times from the same organization-managed laptop and says the corporate VPN was enabled before the second sign-in.",
+      "coachExplanation": "User confirmation is useful but should be corroborated because a compromised account or confused user can still provide incomplete information."
+    },
+    {
+      "id": "device-correlation",
+      "label": "Device correlation",
+      "type": "log",
+      "provenance": "system-generated",
+      "content": "Both events came from the same compliant managed-device identifier and the same approved browser profile. No new device registration occurred.",
+      "coachExplanation": "Same managed device and browser context support continuity, although no single attribute should decide the case."
+    },
+    {
+      "id": "mfa-correlation",
+      "label": "Authentication correlation",
+      "type": "log",
+      "provenance": "system-generated",
+      "content": "The second sign-in used the user's registered phishing-resistant security key. There were no denied prompts or failed challenges around either event.",
+      "coachExplanation": "Strong authentication and absence of unexpected prompts lower suspicion while remaining part of a larger evidence set."
+    },
+    {
+      "id": "vpn-match",
+      "label": "Approved VPN egress match",
+      "type": "policy",
+      "provenance": "policy-defined",
+      "content": "The Chicago-region IP is listed as an approved corporate VPN egress address. Jordan's device telemetry shows the managed VPN connected at 10:29.",
+      "coachExplanation": "This gives a coherent technical explanation for the location shift."
+    },
+    {
+      "id": "activity-review",
+      "label": "Post-sign-in activity",
+      "type": "timeline",
+      "provenance": "system-generated",
+      "content": "Activity after the second sign-in is limited to the same files and applications Jordan normally uses. No new forwarding rule, OAuth grant, privilege change, or bulk download appears in the supplied evidence.",
+      "coachExplanation": "Absence of anomalous follow-on activity supports the benign explanation within the limits of the supplied telemetry."
+    },
+    {
+      "id": "closure-record",
+      "label": "Documented alert closure",
+      "type": "observation",
+      "provenance": "observed",
+      "content": "The alert is closed as a confirmed benign VPN-location anomaly with the user confirmation, device match, MFA match, VPN inventory match, and activity review attached.",
+      "coachExplanation": "A benign closure still needs a reproducible evidence trail and bounded language."
+    },
+    {
+      "id": "verification-record",
+      "label": "Closure verification",
+      "type": "log",
+      "provenance": "system-generated",
+      "content": "No related high-risk sign-ins, unexpected MFA prompts, or anomalous account changes appear during the defined review window.",
+      "coachExplanation": "This verifies the bounded closure decision without claiming future compromise is impossible."
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "stolen-credentials",
+      "label": "An attacker used Jordan's valid credentials",
+      "isRootCause": false,
+      "supportedBy": ["identity-alert"],
+      "contradictedBy": ["device-correlation", "mfa-correlation", "vpn-match", "activity-review"]
+    },
+    {
+      "id": "session-token-theft",
+      "label": "A stolen session token produced the second sign-in",
+      "isRootCause": false,
+      "supportedBy": ["identity-alert"],
+      "contradictedBy": ["mfa-correlation", "vpn-match"]
+    },
+    {
+      "id": "vpn-location",
+      "label": "The approved corporate VPN changed the apparent source location",
+      "isRootCause": true,
+      "supportedBy": ["user-confirmation", "device-correlation", "mfa-correlation", "vpn-match", "activity-review"],
+      "contradictedBy": []
+    },
+    {
+      "id": "shared-account",
+      "label": "Another employee is using a shared account",
+      "isRootCause": false,
+      "supportedBy": ["identity-alert"],
+      "contradictedBy": ["user-confirmation", "device-correlation", "mfa-correlation"]
+    }
+  ],
+  "actions": [
+    {
+      "id": "contact-user",
+      "label": "Contact Jordan through the approved employee directory and ask about both sign-ins",
+      "intent": "ask",
+      "phase": "triage",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": ["user-confirmation"],
+      "scoreEffects": {"scope": 12, "information": 10, "safety": 4},
+      "immediateFeedback": "Jordan confirms the sign-ins and reports enabling the corporate VPN before the apparent location change.",
+      "coachHint": "Use a known independent contact route rather than any address or number supplied by a suspicious event."
+    },
+    {
+      "id": "compare-device",
+      "label": "Compare device and browser identifiers across the two events",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": ["device-correlation"],
+      "scoreEffects": {"information": 12, "evidence": 7},
+      "immediateFeedback": "Both events correlate to the same compliant managed device and approved browser profile.",
+      "coachHint": "Correlation is stronger than geolocation alone but still should not be the sole deciding factor."
+    },
+    {
+      "id": "review-authentication",
+      "label": "Review MFA method and nearby authentication challenges",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": ["mfa-correlation"],
+      "scoreEffects": {"information": 12, "evidence": 8},
+      "immediateFeedback": "The sign-in used the registered security key, with no unexpected prompts or failed challenges.",
+      "coachHint": "Authentication context helps distinguish normal access from several credential-abuse patterns."
+    },
+    {
+      "id": "match-vpn",
+      "label": "Compare the source IP and timestamp with the approved VPN inventory and connection telemetry",
+      "intent": "test",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": ["vpn-match"],
+      "scoreEffects": {"information": 18, "evidence": 10, "efficiency": 4},
+      "immediateFeedback": "The alert location matches an approved VPN egress address and the device connected to that VPN three minutes earlier.",
+      "coachHint": "This directly tests the leading benign explanation."
+    },
+    {
+      "id": "review-follow-on",
+      "label": "Review the supplied post-sign-in activity for account changes and unusual access",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": ["activity-review"],
+      "scoreEffects": {"information": 10, "evidence": 8},
+      "immediateFeedback": "No anomalous follow-on activity appears in the supplied review window.",
+      "coachHint": "A location anomaly matters more when paired with suspicious actions after authentication."
+    },
+    {
+      "id": "disable-immediately",
+      "label": "Disable Jordan's account immediately based only on the location alert",
+      "intent": "change",
+      "phase": "triage",
+      "moveCost": 1,
+      "disruptionCost": 5,
+      "authorization": "requires-escalation",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"authorization": -18, "efficiency": -12, "evidence": -12},
+      "immediateFeedback": "Account disablement requires escalation, and the current evidence does not yet distinguish compromise from approved VPN use.",
+      "coachHint": "Urgent containment can be correct when evidence supports it; geolocation alone is insufficient in this case."
+    },
+    {
+      "id": "ignore-alert",
+      "label": "Dismiss the alert because impossible-travel rules often produce false positives",
+      "intent": "communicate",
+      "phase": "triage",
+      "moveCost": 0,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"evidence": -20, "closure": -15, "safety": -8},
+      "immediateFeedback": "A rule's false-positive potential is not evidence that this event is benign. Investigation is still required.",
+      "coachHint": "Do not confuse skepticism about an alert with proof that it is harmless."
+    },
+    {
+      "id": "call-alert-number",
+      "label": "Call the phone number displayed inside the alert artifact",
+      "intent": "ask",
+      "phase": "triage",
+      "moveCost": 1,
+      "disruptionCost": 1,
+      "authorization": "prohibited",
+      "requiresEvidenceIds": ["identity-alert"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"safety": -20, "authorization": -12},
+      "immediateFeedback": "Use an independently verified directory channel. Contact details inside suspicious content are not trusted routing information.",
+      "coachHint": "Verification channels must be independent of the event being investigated."
+    }
+  ],
+  "decision": {
+    "prompt": "What explanation best fits the complete evidence set?",
+    "options": [
+      {
+        "id": "decide-vpn",
+        "label": "The approved corporate VPN changed the apparent source location on the same managed device",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["user-confirmation", "device-correlation", "mfa-correlation", "vpn-match", "activity-review"],
+        "scoreEffects": {"evidence": 20},
+        "feedback": "The device, authentication, VPN, user, and activity evidence all support the benign VPN explanation."
+      },
+      {
+        "id": "decide-attacker",
+        "label": "An attacker definitely used stolen credentials from Chicago",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"evidence": -20, "communication": -8},
+        "feedback": "The claim exceeds the evidence and ignores the approved VPN match."
+      },
+      {
+        "id": "decide-unknown",
+        "label": "No conclusion is possible even after all supplied evidence is reviewed",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"evidence": -8, "closure": -8},
+        "feedback": "Absolute certainty is unnecessary; the supplied evidence supports a bounded benign closure."
+      }
+    ]
+  },
+  "resolution": {
+    "prompt": "What is the appropriate disposition?",
+    "options": [
+      {
+        "id": "close-benign",
+        "label": "Close as a confirmed benign VPN-location anomaly and attach the correlated evidence",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["vpn-match", "activity-review"],
+        "scoreEffects": {"closure": 18, "communication": 8, "evidence": 8},
+        "feedback": "The closure is evidence-bound and reproducible. It does not claim future account compromise is impossible."
+      },
+      {
+        "id": "reset-anyway",
+        "label": "Reset the password and revoke all sessions anyway, without escalation",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"authorization": -20, "efficiency": -10},
+        "feedback": "Those actions are outside the junior analyst's authority in this scenario and are not supported by the final evidence."
+      },
+      {
+        "id": "delete-alert",
+        "label": "Delete the alert without documenting why it was benign",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"closure": -20, "communication": -8},
+        "feedback": "Undocumented dismissal prevents review and repeatable tuning."
+      }
+    ]
+  },
+  "verification": {
+    "prompt": "What final bounded check supports closure?",
+    "options": [
+      {
+        "id": "verify-related-window",
+        "label": "Confirm no related high-risk sign-ins, unexpected MFA prompts, or account changes appear in the defined review window",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["activity-review"],
+        "scoreEffects": {"verification": 18, "closure": 6},
+        "feedback": "This verifies the closure within a stated window and telemetry scope."
+      },
+      {
+        "id": "verify-user-says-fine",
+        "label": "Rely only on the user's statement that everything seems fine",
+        "isCorrect": false,
+        "requiresEvidenceIds": ["user-confirmation"],
+        "scoreEffects": {"verification": -12, "evidence": -5},
+        "feedback": "User confirmation should be correlated with system evidence."
+      },
+      {
+        "id": "verify-no-future-risk",
+        "label": "Record that the account cannot be compromised in the future",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"verification": -18, "communication": -12},
+        "feedback": "No current investigation can justify an unlimited future guarantee."
+      }
+    ]
+  },
+  "communication": {
+    "prompt": "Build the alert disposition from supported statements.",
+    "requiredMessageParts": ["msg-alert", "msg-correlation", "msg-disposition", "msg-limit"],
+    "availableMessageParts": [
+      {"id": "msg-alert", "text": "The alert reflected two successful sign-ins with different apparent regions.", "category": "evidence"},
+      {"id": "msg-correlation", "text": "Both events matched the same managed device, registered security key, and approved VPN egress timeline.", "category": "evidence"},
+      {"id": "msg-disposition", "text": "The event is closed as a confirmed benign VPN-location anomaly.", "category": "closure"},
+      {"id": "msg-limit", "text": "This conclusion is limited to the supplied review window and evidence; it is not a permanent account-safety guarantee.", "category": "certainty"},
+      {"id": "msg-unsupported", "text": "Impossible-travel alerts are useless and can always be ignored.", "category": "unsupported"}
+    ]
+  },
+  "debrief": {
+    "rootCauseExplanation": "The second sign-in originated from an approved corporate VPN egress address after the same managed device connected to the VPN. Device, MFA, user, network, and follow-on activity evidence support a benign location anomaly rather than account compromise.",
+    "bestPathActionIds": ["contact-user", "compare-device", "review-authentication", "match-vpn", "review-follow-on"],
+    "teachingPoints": [
+      "Geolocation is a signal, not a verdict.",
+      "Valid-account abuse is real, so an alert still requires investigation.",
+      "Independent user contact plus device, MFA, network, and activity correlation produces a stronger decision than any one clue.",
+      "A benign closure should state its evidence and limits."
+    ],
+    "falseAssuranceWarnings": [
+      "A matching device identifier alone does not prove the user controlled the session.",
+      "A user's recollection alone is not sufficient system evidence.",
+      "Closing this alert does not prove the account is safe forever."
+    ]
+  },
+  "scoring": {
+    "startingScore": 50,
+    "minimumScore": 0,
+    "dimensions": [
+      {"id": "scope", "label": "Scope", "weight": 10},
+      {"id": "authorization", "label": "Authorization", "weight": 15},
+      {"id": "safety", "label": "Safety", "weight": 15},
+      {"id": "information", "label": "Information gain", "weight": 15},
+      {"id": "efficiency", "label": "Efficiency", "weight": 10},
+      {"id": "evidence", "label": "Evidence reasoning", "weight": 15},
+      {"id": "communication", "label": "Communication", "weight": 5},
+      {"id": "verification", "label": "Verification", "weight": 10},
+      {"id": "closure", "label": "Closure", "weight": 5}
+    ],
+    "rankBands": [
+      {"minimum": 90, "label": "Signal Correlator"},
+      {"minimum": 75, "label": "Methodical Analyst"},
+      {"minimum": 60, "label": "Developing Investigator"},
+      {"minimum": 0, "label": "Review the Evidence"}
+    ]
+  }
+}

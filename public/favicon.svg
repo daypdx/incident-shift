@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Incident Shift handoff pulse">
+  <rect width="192" height="192" rx="42" fill="#101820"/>
+  <rect x="27" y="31" width="86" height="70" rx="22" fill="#21313D" stroke="#6EA8D7" stroke-width="5"/>
+  <rect x="79" y="91" width="86" height="70" rx="22" fill="#18242F" stroke="#344657" stroke-width="5"/>
+  <path d="M64 66c69 0 13 60 67 60" fill="none" stroke="#6EA8D7" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="60" cy="66" r="12" fill="#F0A44B"/>
+  <circle cx="133" cy="126" r="12" fill="#2BC3A5"/>
+</svg>

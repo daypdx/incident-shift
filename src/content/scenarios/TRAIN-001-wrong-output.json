@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "1.1",
+  "artifactFamily": "device-flow",
+  "unscored": true,
+  "id": "TRAIN-001",
+  "version": 1,
+  "title": "Wrong Output",
+  "subtitle": "The meeting app shows sound activity, but the headset is silent.",
+  "track": "service-desk",
+  "difficulty": "rookie",
+  "estimatedMinutes": 3,
+  "stability": "evergreen",
+  "contentReview": {
+    "lastReviewed": "2026-08-17",
+    "reviewBy": "2027-08-17",
+    "sourceUrls": ["https://www.comptia.org/en/certifications/a/core-1-v15/"],
+    "reviewNotes": "Unscored synthetic Training Shift that teaches report, observation, authority, and verification."
+  },
+  "playerRole": "Service-desk technician in the fictional Northstar Learning Cooperative",
+  "authorityScope": {
+    "allowed": ["Ask focused scope questions", "Inspect and test the assigned device", "Change the selected output on the assigned device"],
+    "requiresEscalation": ["Replace managed hardware"],
+    "prohibited": ["Change organization-wide meeting settings", "Reinstall all drivers before observing the device"]
+  },
+  "learningObjectives": ["Separate a reported symptom from a proven cause", "Choose a read-only test before a change", "Verify the original meeting outcome"],
+  "briefing": {
+    "timestamp": "08:00",
+    "channel": "ticket",
+    "requester": "Sam K. — Training",
+    "summary": "The meeting app shows sound activity, but nothing comes through the headset. Sam thinks the audio driver is broken.",
+    "initialEvidenceIds": ["audio-report"]
+  },
+  "evidence": [
+    {"id":"audio-report","label":"Original report","type":"user-report","provenance":"reported","content":"Sam reports a silent headset and assumes the audio driver is broken.","coachExplanation":"A report establishes the symptom, not the cause."},
+    {"id":"scope-audio","label":"Audio scope","type":"user-report","provenance":"reported","content":"All applications are silent through the headset, while the laptop speakers make sound.","coachExplanation":"The working speakers weaken a system-wide driver failure."},
+    {"id":"selected-output","label":"Selected output","type":"observation","provenance":"observed","content":"The meeting app is sending audio to Laptop speakers. The connected headset is available but not selected.","coachExplanation":"Inspection reveals the mismatch without changing anything."},
+    {"id":"test-sound-speakers","label":"Approved test sound","type":"observation","provenance":"observed","content":"The approved test sound plays through the laptop speakers, matching the selected output.","coachExplanation":"This confirms the path and makes the next change evidence-based."},
+    {"id":"output-corrected","label":"Headset selected","type":"observation","provenance":"observed","content":"The connected headset is now the selected meeting output.","coachExplanation":"The narrow change matches the observed cause."},
+    {"id":"test-call-passed","label":"Test call passed","type":"timeline","provenance":"system-generated","content":"Sam hears both the test tone and a colleague during the approved meeting pre-call.","coachExplanation":"Verification reproduces the original required outcome."}
+  ],
+  "hypotheses": [
+    {"id":"wrong-output","label":"The app is sending sound to the wrong output device","isRootCause":true,"supportedBy":["selected-output","test-sound-speakers"],"contradictedBy":[]},
+    {"id":"driver-failure","label":"The audio driver has failed","isRootCause":false,"supportedBy":["audio-report"],"contradictedBy":["scope-audio","test-sound-speakers"]},
+    {"id":"meeting-outage","label":"The meeting service has an audio outage","isRootCause":false,"supportedBy":["audio-report"],"contradictedBy":["scope-audio","selected-output"]}
+  ],
+  "actions": [
+    {"id":"ask-audio-scope","label":"Ask whether speakers and other applications make sound","intent":"ask","phase":"triage","moveCost":1,"disruptionCost":0,"authorization":"allowed","requiresEvidenceIds":["audio-report"],"revealsEvidenceIds":["scope-audio"],"scoreEffects":{"scope":15,"information":10},"immediateFeedback":"The laptop speakers work, narrowing the problem.","coachHint":"Scope separates one output path from a system-wide failure."},
+    {"id":"inspect-output","label":"Inspect the selected output device","intent":"observe","phase":"investigate","moveCost":1,"disruptionCost":0,"authorization":"allowed","requiresEvidenceIds":["audio-report"],"revealsEvidenceIds":["selected-output"],"scoreEffects":{"information":18,"evidence":10},"immediateFeedback":"The app is using laptop speakers, not the headset.","coachHint":"Tests reveal; changes alter. Inspect first."},
+    {"id":"play-test-sound","label":"Play the approved test sound","intent":"test","phase":"investigate","moveCost":1,"disruptionCost":0,"authorization":"allowed","requiresEvidenceIds":["selected-output"],"revealsEvidenceIds":["test-sound-speakers"],"scoreEffects":{"information":12,"evidence":8},"immediateFeedback":"The sound follows the selected speakers.","coachHint":"This tests the observed routing mismatch."},
+    {"id":"reinstall-every-driver","label":"Remove and reinstall every audio driver","intent":"change","phase":"investigate","moveCost":3,"disruptionCost":4,"authorization":"prohibited","requiresEvidenceIds":["audio-report"],"revealsEvidenceIds":[],"scoreEffects":{"authorization":-25,"safety":-18,"efficiency":-15},"immediateFeedback":"This broad change is outside the training role and bypasses observation.","coachHint":"A report alone does not justify a broad change."},
+    {"id":"change-global-audio","label":"Change organization-wide meeting audio defaults","intent":"change","phase":"investigate","moveCost":2,"disruptionCost":5,"authorization":"prohibited","requiresEvidenceIds":["audio-report"],"revealsEvidenceIds":[],"scoreEffects":{"authorization":-30,"safety":-25},"immediateFeedback":"An organization-wide change is prohibited for one user's symptom.","coachHint":"Authority and blast radius stay visible in every mode."}
+  ],
+  "decision": {"prompt":"Which explanation best fits what you observed?","options":[
+    {"id":"decide-wrong-output","label":"The app is sending sound to the laptop speakers instead of the headset","isCorrect":true,"requiresEvidenceIds":["selected-output","test-sound-speakers"],"scoreEffects":{"evidence":20},"feedback":"The observation and test both support this explanation."},
+    {"id":"decide-driver","label":"Every audio driver has failed","isCorrect":false,"scoreEffects":{"evidence":-15},"feedback":"Working speakers contradict a total driver failure."},
+    {"id":"decide-outage","label":"The meeting service is down for everyone","isCorrect":false,"scoreEffects":{"scope":-12},"feedback":"The evidence is limited to one output selection."}
+  ]},
+  "resolution": {"prompt":"What is the narrowest authorized correction?","options":[
+    {"id":"select-headset","label":"Select the connected headset for this meeting app","isCorrect":true,"requiresEvidenceIds":["selected-output"],"scoreEffects":{"authorization":15,"safety":15,"closure":10},"feedback":"The change is narrow, reversible, and tied to the observation."},
+    {"id":"replace-laptop","label":"Replace the laptop immediately","isCorrect":false,"scoreEffects":{"efficiency":-20},"feedback":"The evidence does not support hardware replacement."}
+  ]},
+  "verification": {"prompt":"How will you prove the original outcome?","options":[
+    {"id":"verify-test-call","label":"Repeat the test tone and complete a meeting pre-call with Sam","isCorrect":true,"requiresEvidenceIds":["test-sound-speakers"],"scoreEffects":{"verification":20,"closure":10},"feedback":"This checks the corrected path and the user's real outcome."},
+    {"id":"verify-icon","label":"Confirm only that the headset icon appears","isCorrect":false,"scoreEffects":{"verification":-15},"feedback":"An icon does not prove that Sam can hear the meeting."}
+  ]},
+  "communication": {"prompt":"Build a short closure note.","requiredMessageParts":["msg-symptom","msg-evidence","msg-action","msg-proof"],"availableMessageParts":[
+    {"id":"msg-symptom","text":"The headset was silent while laptop speakers still worked.","category":"scope"},
+    {"id":"msg-evidence","text":"The meeting app was configured to use laptop speakers.","category":"evidence"},
+    {"id":"msg-action","text":"I selected the connected headset in the meeting app.","category":"action"},
+    {"id":"msg-proof","text":"The test tone and meeting pre-call both succeeded.","category":"verification"},
+    {"id":"msg-unsupported","text":"All organization audio failures are permanently fixed.","category":"unsupported"}
+  ]},
+  "debrief": {"rootCauseExplanation":"The meeting app was sending sound to the laptop speakers. Inspecting the selected output and playing a test sound established the cause before the narrow correction; the pre-call proved the outcome.","bestPathActionIds":["ask-audio-scope","inspect-output","play-test-sound"],"teachingPoints":["Reports are not conclusions.","Tests reveal; changes alter.","Authority limits blast radius.","Close with proof of the original outcome."],"falseAssuranceWarnings":["A selected icon alone does not prove sound works."]},
+  "scoring": {"startingScore":50,"minimumScore":0,"dimensions":[
+    {"id":"scope","label":"Scope","weight":10},{"id":"authorization","label":"Authorization","weight":15},{"id":"safety","label":"Safety","weight":15},{"id":"information","label":"Information gain","weight":15},{"id":"efficiency","label":"Efficiency","weight":10},{"id":"evidence","label":"Evidence reasoning","weight":15},{"id":"communication","label":"Communication","weight":5},{"id":"verification","label":"Verification","weight":10},{"id":"closure","label":"Closure","weight":5}
+  ],"rankBands":[{"minimum":90,"label":"Training complete"},{"minimum":75,"label":"Training complete"},{"minimum":60,"label":"Training complete"},{"minimum":0,"label":"Training complete"}]}
+}

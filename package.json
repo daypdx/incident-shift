@@ -1,0 +1,44 @@
+{
+  "name": "incident-shift",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run generate:content && tsc -b && vite build",
+    "build:pages": "npm run generate:content && tsc -b && vite build --base /incident-shift/ && tsx scripts/prepare-pages.ts",
+    "generate:content": "tsx scripts/generate-content-index.ts",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --maxWorkers=1 --no-file-parallelism",
+    "test:browser": "playwright test",
+    "validate:content": "tsx scripts/validate-content.ts",
+    "check": "npm run validate:content && npm run typecheck && npm run lint && npm run test && npm run build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.62.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.5",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.5",
+    "eslint": "10.8.1",
+    "globals": "17.11.0",
+    "jsdom": "30.0.1",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.67.0",
+    "tsx": "4.23.12",
+    "vite": "8.2.1",
+    "vitest": "4.1.11"
+  }
+}

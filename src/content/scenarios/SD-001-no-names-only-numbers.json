@@ -1,0 +1,426 @@
+{
+  "schemaVersion": "1.1",
+  "artifactFamily": "connection-path",
+  "unscored": false,
+  "id": "SD-001",
+  "version": 1,
+  "title": "No Names, Only Numbers",
+  "subtitle": "The workstation is connected, but ordinary websites will not load.",
+  "track": "service-desk",
+  "difficulty": "rookie",
+  "estimatedMinutes": 6,
+  "stability": "evergreen",
+  "contentReview": {
+    "lastReviewed": "2026-08-17",
+    "reviewBy": "2027-08-17",
+    "sourceUrls": [
+      "https://www.comptia.org/en/certifications/a/core-1-v15/"
+    ],
+    "reviewNotes": "Synthetic DNS-isolation case aligned to current A+ Core 1 troubleshooting, networking, and connectivity objectives. Commands and addresses are fictional documentation examples."
+  },
+  "playerRole": "Tier 1 service-desk technician for the fictional Northstar Learning Cooperative",
+  "authorityScope": {
+    "allowed": [
+      "Ask the user focused scope questions",
+      "Run read-only network diagnostics on the assigned workstation",
+      "Restore the approved automatic DNS configuration on the assigned workstation",
+      "Verify service and document the result"
+    ],
+    "requiresEscalation": [
+      "Change shared network infrastructure",
+      "Modify organization-wide DNS or DHCP services",
+      "Disable security controls"
+    ],
+    "prohibited": [
+      "Restart shared routers or switches without authorization",
+      "Configure an unapproved public DNS resolver",
+      "Claim an organization-wide outage without evidence"
+    ]
+  },
+  "learningObjectives": [
+    "Establish whether a connectivity report affects one user or a broader service",
+    "Separate link, gateway, internet reachability, and name-resolution failures",
+    "Prefer read-only discriminating tests before configuration changes",
+    "Verify both name resolution and browser access after correction"
+  ],
+  "briefing": {
+    "timestamp": "08:17",
+    "channel": "ticket",
+    "requester": "Maya R. — Enrollment Services",
+    "summary": "My laptop says it is connected to Wi-Fi, but websites will not open. I have an online meeting in fifteen minutes. Please restart whatever server is broken.",
+    "initialEvidenceIds": ["ticket-report"]
+  },
+  "evidence": [
+    {
+      "id": "ticket-report",
+      "label": "Original user report",
+      "type": "user-report",
+      "provenance": "reported",
+      "content": "The user reports Wi-Fi shows connected and websites do not open. The user assumes a server is broken; that assumption is not verified.",
+      "coachExplanation": "A user report is valuable evidence about symptoms, not proof of scope or cause."
+    },
+    {
+      "id": "scope-answer",
+      "label": "Scope response",
+      "type": "user-report",
+      "provenance": "reported",
+      "content": "Two nearby coworkers are using the same Wi-Fi and can reach the meeting site. Maya's phone also works on the same wireless network.",
+      "coachExplanation": "This strongly narrows the problem to the assigned workstation or its user-specific configuration."
+    },
+    {
+      "id": "ip-config",
+      "label": "IP configuration",
+      "type": "command-output",
+      "provenance": "system-generated",
+      "content": "IPv4 Address: 192.0.2.84\nSubnet Mask: 255.255.255.0\nDefault Gateway: 192.0.2.1\nDNS Servers: 198.51.100.53\nAdapter: Connected",
+      "coachExplanation": "The documentation-range addresses are synthetic. The workstation has a plausible local address and gateway, but the DNS value deserves testing rather than immediate judgment."
+    },
+    {
+      "id": "gateway-success",
+      "label": "Gateway reachability",
+      "type": "command-output",
+      "provenance": "system-generated",
+      "content": "Four replies from 192.0.2.1. Packet loss: 0%.",
+      "coachExplanation": "The local link and path to the default gateway are working at the time of the test."
+    },
+    {
+      "id": "public-ip-success",
+      "label": "Direct IP reachability",
+      "type": "command-output",
+      "provenance": "system-generated",
+      "content": "The approved connectivity test to 203.0.113.10 succeeds with stable latency.",
+      "coachExplanation": "Successful direct-IP access weakens the total-outage and default-gateway hypotheses while keeping DNS or proxy problems plausible."
+    },
+    {
+      "id": "dns-timeout",
+      "label": "Name-resolution test",
+      "type": "command-output",
+      "provenance": "system-generated",
+      "content": "The approved lookup for portal.northstar.example times out while querying 198.51.100.53.",
+      "coachExplanation": "This directly tests name resolution and identifies the configured resolver involved in the failure."
+    },
+    {
+      "id": "vpn-history",
+      "label": "Recent change",
+      "type": "user-report",
+      "provenance": "reported",
+      "content": "Maya used a temporary training VPN yesterday. The VPN disconnected unexpectedly before shutdown.",
+      "coachExplanation": "This is a plausible change that could explain a stale resolver, but it becomes useful only when combined with the failed resolver test."
+    },
+    {
+      "id": "restored-config",
+      "label": "Approved configuration restored",
+      "type": "observation",
+      "provenance": "observed",
+      "content": "The stale VPN-provided DNS value was removed using the approved workstation procedure. The adapter again receives the organization's approved DNS settings automatically.",
+      "coachExplanation": "The action is narrow, reversible, authorized, and tied to the evidence."
+    },
+    {
+      "id": "verification-success",
+      "label": "Service verification",
+      "type": "command-output",
+      "provenance": "system-generated",
+      "content": "The approved hostname resolves, the meeting site opens, and Maya successfully joins its pre-call device check.",
+      "coachExplanation": "Verification covers both the technical symptom and the user's required outcome."
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "organization-outage",
+      "label": "The organization's internet connection is down",
+      "isRootCause": false,
+      "supportedBy": ["ticket-report"],
+      "contradictedBy": ["scope-answer", "public-ip-success"]
+    },
+    {
+      "id": "wifi-link-failure",
+      "label": "The laptop has no functioning local network link",
+      "isRootCause": false,
+      "supportedBy": ["ticket-report"],
+      "contradictedBy": ["ip-config", "gateway-success"]
+    },
+    {
+      "id": "gateway-failure",
+      "label": "The workstation cannot reach its default gateway",
+      "isRootCause": false,
+      "supportedBy": ["ticket-report"],
+      "contradictedBy": ["gateway-success"]
+    },
+    {
+      "id": "stale-dns",
+      "label": "A stale VPN-provided DNS resolver remains configured",
+      "isRootCause": true,
+      "supportedBy": ["ip-config", "public-ip-success", "dns-timeout", "vpn-history"],
+      "contradictedBy": []
+    },
+    {
+      "id": "browser-only",
+      "label": "Only the browser profile is malfunctioning",
+      "isRootCause": false,
+      "supportedBy": ["ticket-report"],
+      "contradictedBy": ["dns-timeout"]
+    }
+  ],
+  "actions": [
+    {
+      "id": "ask-scope",
+      "label": "Ask whether coworkers and another device on the same Wi-Fi are affected",
+      "intent": "ask",
+      "phase": "triage",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["ticket-report"],
+      "revealsEvidenceIds": ["scope-answer"],
+      "scoreEffects": {"scope": 18, "information": 8, "efficiency": 4},
+      "immediateFeedback": "You established that the report is user-specific rather than organization-wide.",
+      "coachHint": "Scope questions often eliminate the most expensive hypotheses before any command is run."
+    },
+    {
+      "id": "inspect-ip",
+      "label": "Inspect the workstation's current IP, gateway, adapter, and DNS configuration",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["ticket-report"],
+      "revealsEvidenceIds": ["ip-config"],
+      "scoreEffects": {"information": 10, "evidence": 6},
+      "immediateFeedback": "You collected the configuration without changing the workstation.",
+      "coachHint": "Read the actual configuration before assuming that 'connected' means every layer is healthy."
+    },
+    {
+      "id": "test-gateway",
+      "label": "Test reachability to the configured default gateway",
+      "intent": "test",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["ip-config"],
+      "revealsEvidenceIds": ["gateway-success"],
+      "scoreEffects": {"information": 8, "evidence": 5},
+      "immediateFeedback": "The workstation reaches the local gateway, weakening local-link and gateway-failure explanations.",
+      "coachHint": "This test isolates the local path without claiming anything yet about DNS or application behavior."
+    },
+    {
+      "id": "test-public-ip",
+      "label": "Use the approved direct-IP connectivity check",
+      "intent": "test",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["gateway-success"],
+      "revealsEvidenceIds": ["public-ip-success"],
+      "scoreEffects": {"information": 12, "evidence": 6, "efficiency": 3},
+      "immediateFeedback": "Direct-IP reachability works. The total-outage hypothesis is now weak.",
+      "coachHint": "Compare direct-IP behavior with hostname behavior to isolate name resolution."
+    },
+    {
+      "id": "test-dns",
+      "label": "Run an approved hostname lookup against the configured resolver",
+      "intent": "test",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["ip-config"],
+      "revealsEvidenceIds": ["dns-timeout"],
+      "scoreEffects": {"information": 16, "evidence": 10},
+      "immediateFeedback": "The configured resolver times out while direct-IP connectivity remains available.",
+      "coachHint": "This is the most discriminating test once direct-IP reachability has been established."
+    },
+    {
+      "id": "ask-change",
+      "label": "Ask about recent VPN, network, or security-software changes",
+      "intent": "ask",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["ip-config"],
+      "revealsEvidenceIds": ["vpn-history"],
+      "scoreEffects": {"scope": 5, "information": 8},
+      "immediateFeedback": "The recent VPN disconnect provides a plausible mechanism for the stale resolver.",
+      "coachHint": "Recent-change evidence is strongest when it explains an independently observed failure."
+    },
+    {
+      "id": "restart-router",
+      "label": "Restart the shared office router immediately",
+      "intent": "change",
+      "phase": "investigate",
+      "moveCost": 2,
+      "disruptionCost": 5,
+      "authorization": "prohibited",
+      "requiresEvidenceIds": ["ticket-report"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"authorization": -25, "safety": -20, "efficiency": -12},
+      "immediateFeedback": "You do not have authorization or evidence for a shared-infrastructure restart. The action would disrupt working users.",
+      "coachHint": "Do not turn one user's symptom into an office-wide outage."
+    },
+    {
+      "id": "set-public-dns",
+      "label": "Configure an unapproved public DNS resolver",
+      "intent": "change",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 2,
+      "authorization": "prohibited",
+      "requiresEvidenceIds": ["ip-config"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"authorization": -20, "safety": -12, "evidence": -4},
+      "immediateFeedback": "This bypasses approved configuration and may create policy, filtering, or logging problems. It also does not explain the current failure.",
+      "coachHint": "A workaround is not automatically an authorized correction."
+    },
+    {
+      "id": "reinstall-driver",
+      "label": "Remove and reinstall the wireless adapter driver",
+      "intent": "change",
+      "phase": "investigate",
+      "moveCost": 3,
+      "disruptionCost": 3,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["ticket-report"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"efficiency": -15, "information": -5},
+      "immediateFeedback": "The action is broad and disruptive, and current evidence does not point to a failed adapter driver.",
+      "coachHint": "Prefer a test that distinguishes causes before replacing a functioning component."
+    }
+  ],
+  "decision": {
+    "prompt": "Which explanation best fits the evidence you collected?",
+    "options": [
+      {
+        "id": "decide-stale-dns",
+        "label": "A stale VPN-provided DNS resolver remains configured on this workstation",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["ip-config", "public-ip-success", "dns-timeout", "vpn-history"],
+        "scoreEffects": {"evidence": 20},
+        "feedback": "This explanation accounts for working local/direct-IP connectivity, failing hostname resolution, the configured resolver, and the recent VPN change."
+      },
+      {
+        "id": "decide-outage",
+        "label": "The organization's internet connection is down",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"evidence": -18},
+        "feedback": "Working coworkers, another device, and direct-IP reachability contradict an organization-wide outage."
+      },
+      {
+        "id": "decide-driver",
+        "label": "The wireless adapter driver has failed",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"evidence": -12},
+        "feedback": "The adapter is connected and reaches both the gateway and an approved public IP."
+      }
+    ]
+  },
+  "resolution": {
+    "prompt": "What is the narrowest authorized correction?",
+    "options": [
+      {
+        "id": "restore-approved-dns",
+        "label": "Use the approved workstation procedure to remove the stale VPN DNS value and restore automatic organization-managed DNS",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["dns-timeout", "vpn-history"],
+        "scoreEffects": {"authorization": 14, "safety": 14, "closure": 8},
+        "feedback": "The correction is authorized, narrow, reversible, and tied directly to the observed configuration."
+      },
+      {
+        "id": "change-shared-dns",
+        "label": "Change the organization's shared DNS server configuration",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"authorization": -25, "safety": -18},
+        "feedback": "The evidence is workstation-specific, and shared infrastructure is outside your authority."
+      },
+      {
+        "id": "tell-user-use-phone",
+        "label": "Close the ticket because the user can join from a phone",
+        "isCorrect": false,
+        "requiresEvidenceIds": ["scope-answer"],
+        "scoreEffects": {"closure": -14, "communication": -6},
+        "feedback": "A temporary alternative does not resolve or document the workstation fault."
+      }
+    ]
+  },
+  "verification": {
+    "prompt": "How do you prove the correction worked?",
+    "options": [
+      {
+        "id": "verify-resolution-and-outcome",
+        "label": "Repeat the approved hostname lookup, open the meeting site, and have the user complete its pre-call check",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["dns-timeout"],
+        "scoreEffects": {"verification": 20, "closure": 8},
+        "feedback": "This verifies the failed layer and the user's actual required outcome."
+      },
+      {
+        "id": "verify-icon-only",
+        "label": "Confirm only that the Wi-Fi icon still says Connected",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"verification": -14},
+        "feedback": "The Wi-Fi icon was already connected while the problem existed."
+      },
+      {
+        "id": "verify-reboot",
+        "label": "Restart the laptop and assume a clean startup proves success",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"verification": -10, "efficiency": -5},
+        "feedback": "A reboot is not proof that name resolution and the meeting workflow now function."
+      }
+    ]
+  },
+  "communication": {
+    "prompt": "Build a concise ticket update using the supported statements.",
+    "requiredMessageParts": ["msg-scope", "msg-evidence", "msg-action", "msg-verification"],
+    "availableMessageParts": [
+      {"id": "msg-scope", "text": "The issue was limited to one workstation; nearby users and another device remained online.", "category": "scope"},
+      {"id": "msg-evidence", "text": "Direct-IP connectivity worked, but the configured VPN-provided DNS resolver timed out.", "category": "evidence"},
+      {"id": "msg-action", "text": "I restored the approved automatic DNS configuration on the assigned workstation.", "category": "action"},
+      {"id": "msg-verification", "text": "Hostname resolution, the meeting site, and the user's pre-call check all succeeded afterward.", "category": "verification"},
+      {"id": "msg-unsupported", "text": "The company DNS server crashed and has been permanently repaired.", "category": "unsupported"}
+    ]
+  },
+  "debrief": {
+    "rootCauseExplanation": "A temporary VPN left a stale DNS resolver configured on one workstation. Local connectivity, the gateway, and direct-IP access all worked; hostname resolution through the configured resolver failed. Restoring the approved automatic DNS configuration resolved the symptom.",
+    "bestPathActionIds": ["ask-scope", "inspect-ip", "test-gateway", "test-public-ip", "test-dns", "ask-change"],
+    "teachingPoints": [
+      "Connected Wi-Fi proves only part of the path.",
+      "Scope before disruption: one affected user should not trigger a shared-infrastructure restart.",
+      "Compare direct-IP and hostname behavior to isolate name resolution.",
+      "Verification must reproduce the user's required outcome, not merely a status icon."
+    ],
+    "falseAssuranceWarnings": [
+      "A successful ping does not prove every application works.",
+      "Changing to a public DNS resolver might hide the symptom while violating policy.",
+      "A reboot without reproducing the original workflow is not adequate closure."
+    ]
+  },
+  "scoring": {
+    "startingScore": 50,
+    "minimumScore": 0,
+    "dimensions": [
+      {"id": "scope", "label": "Scope", "weight": 10},
+      {"id": "authorization", "label": "Authorization", "weight": 15},
+      {"id": "safety", "label": "Safety", "weight": 15},
+      {"id": "information", "label": "Information gain", "weight": 15},
+      {"id": "efficiency", "label": "Efficiency", "weight": 10},
+      {"id": "evidence", "label": "Evidence reasoning", "weight": 15},
+      {"id": "communication", "label": "Communication", "weight": 5},
+      {"id": "verification", "label": "Verification", "weight": 10},
+      {"id": "closure", "label": "Closure", "weight": 5}
+    ],
+    "rankBands": [
+      {"minimum": 90, "label": "Evidence Hunter"},
+      {"minimum": 75, "label": "Methodical Technician"},
+      {"minimum": 60, "label": "Developing Troubleshooter"},
+      {"minimum": 0, "label": "Review the Path"}
+    ]
+  }
+}

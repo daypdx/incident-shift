@@ -1,0 +1,418 @@
+{
+  "schemaVersion": "1.1",
+  "artifactFamily": "email-call-timeline",
+  "unscored": false,
+  "id": "SOC-001",
+  "version": 1,
+  "title": "The Help Desk Is Calling",
+  "subtitle": "Email bombing and an unsolicited support call arrive together.",
+  "track": "security-operations",
+  "difficulty": "analyst",
+  "estimatedMinutes": 8,
+  "stability": "review-quarterly",
+  "contentReview": {
+    "lastReviewed": "2026-08-17",
+    "reviewBy": "2026-11-17",
+    "sourceUrls": [
+      "https://www.microsoft.com/en-us/security/security-insider/threat-landscape/microsoft-digital-defense-report-2025",
+      "https://www.cisa.gov/audiences/small-and-medium-businesses/secure-your-business/require-multifactor-authentication",
+      "https://attack.mitre.org/techniques/T1078/"
+    ],
+    "reviewNotes": "Synthetic social-engineering case based on current email-bombing, voice/chat impersonation, and identity-abuse patterns. It intentionally omits executable malicious commands and real infrastructure."
+  },
+  "playerRole": "Service-desk technician receiving a potential security incident for the fictional Northstar Learning Cooperative",
+  "authorityScope": {
+    "allowed": [
+      "Tell the user to end unverified contact and deny unexpected MFA prompts",
+      "Ask what the user clicked, entered, approved, downloaded, or ran",
+      "Preserve supplied message and call metadata",
+      "Open a security escalation through the approved incident channel",
+      "Provide the approved security-team contact route"
+    ],
+    "requiresEscalation": [
+      "Revoke sessions or credentials",
+      "Isolate a managed endpoint",
+      "Block senders, domains, or tenant-wide applications",
+      "Search enterprise logs beyond the supplied case"
+    ],
+    "prohibited": [
+      "Connect to the caller's remote-support session",
+      "Ask the user to repeat or paste suspicious commands",
+      "Use contact links supplied by the suspected attacker",
+      "Promise that no compromise occurred before investigation"
+    ]
+  },
+  "learningObjectives": [
+    "Recognize email bombing combined with support impersonation as a coordinated social-engineering pattern",
+    "Use the user's actions to determine whether the event is an attempt or a likely compromise",
+    "Stop the active interaction without destroying evidence",
+    "Escalate through a known channel with precise scope and bounded confidence",
+    "Avoid unnecessary credential or endpoint actions outside the player's authority"
+  ],
+  "briefing": {
+    "timestamp": "14:06",
+    "channel": "phone",
+    "requester": "Avery S. — Finance",
+    "summary": "Hundreds of subscription emails began arriving within minutes. Then someone called through the collaboration app claiming to be IT support and asked Avery to approve a login prompt so they could stop the messages. Avery ended the call and contacted the published help-desk number instead.",
+    "initialEvidenceIds": ["user-report"]
+  },
+  "evidence": [
+    {
+      "id": "user-report",
+      "label": "Initial report",
+      "type": "user-report",
+      "provenance": "reported",
+      "content": "A sudden flood of subscription messages was followed by an unsolicited collaboration-app call from someone claiming to be IT. The caller asked Avery to approve an authentication prompt.",
+      "coachExplanation": "The sequence and request are suspicious, but the immediate priority is to establish what the user actually did."
+    },
+    {
+      "id": "action-scope",
+      "label": "User-action scope",
+      "type": "user-report",
+      "provenance": "reported",
+      "content": "Avery did not approve a prompt, disclose a password, install software, open an attachment, follow a link, or run a command. Avery ended the call and used the internal directory to reach the real help desk.",
+      "coachExplanation": "This currently supports an attempted social-engineering event, not a confirmed endpoint or account compromise."
+    },
+    {
+      "id": "message-metadata",
+      "label": "Email pattern metadata",
+      "type": "email",
+      "provenance": "system-generated",
+      "content": "The messages are high-volume subscription confirmations from many unrelated legitimate services. They began within a six-minute window. No attachment or single common sender explains the entire flood.",
+      "coachExplanation": "A burst of legitimate subscription traffic can be used to overwhelm attention and conceal important messages."
+    },
+    {
+      "id": "call-metadata",
+      "label": "Impersonation-call metadata",
+      "type": "chat",
+      "provenance": "system-generated",
+      "content": "The caller used a newly created external guest account with a display name resembling Internal IT. The account is not in the approved support directory.",
+      "coachExplanation": "Display names are not identity proof. The external account and directory mismatch strengthen the impersonation hypothesis."
+    },
+    {
+      "id": "auth-review",
+      "label": "Supplied authentication evidence",
+      "type": "log",
+      "provenance": "system-generated",
+      "content": "One unexpected MFA request was denied. No successful unfamiliar sign-in appears in the supplied review window. No new device, recovery method, forwarding rule, or OAuth grant appears.",
+      "coachExplanation": "The supplied evidence supports an attempted access event. It does not justify claiming that broader compromise is impossible."
+    },
+    {
+      "id": "known-channel",
+      "label": "Known security route",
+      "type": "policy",
+      "provenance": "policy-defined",
+      "content": "Policy directs suspected impersonation and unexpected MFA events to the internal security queue through the directory-listed incident channel. Service-desk staff preserve metadata and do not conduct tenant-wide investigation themselves.",
+      "coachExplanation": "The playbook defines both the next action and the technician's stopping boundary."
+    },
+    {
+      "id": "escalation-record",
+      "label": "Security escalation",
+      "type": "observation",
+      "provenance": "observed",
+      "content": "The event is escalated as coordinated email bombing plus support impersonation. The ticket states that no password, approval, installation, command, attachment, or link use was reported, and that one unexpected MFA request was denied.",
+      "coachExplanation": "This gives the security team precise knowns, unknowns, and reported non-actions without declaring the event harmless."
+    },
+    {
+      "id": "verification-record",
+      "label": "Immediate safety verification",
+      "type": "timeline",
+      "provenance": "system-generated",
+      "content": "Avery remains disconnected from the impersonator, knows the approved support route, and confirms no further unexpected MFA prompt appeared during the immediate observation period. Security owns the continued investigation.",
+      "coachExplanation": "The technician verifies the immediate protective state and hands off rather than claiming the entire incident is resolved."
+    }
+  ],
+  "hypotheses": [
+    {
+      "id": "ordinary-spam",
+      "label": "Unrelated ordinary spam happened to coincide with a legitimate support call",
+      "isRootCause": false,
+      "supportedBy": ["user-report"],
+      "contradictedBy": ["message-metadata", "call-metadata", "auth-review"]
+    },
+    {
+      "id": "coordinated-impersonation",
+      "label": "A coordinated social-engineering attempt used email bombing and support impersonation to obtain account access",
+      "isRootCause": true,
+      "supportedBy": ["user-report", "message-metadata", "call-metadata", "auth-review"],
+      "contradictedBy": []
+    },
+    {
+      "id": "confirmed-compromise",
+      "label": "The account and endpoint are already confirmed compromised",
+      "isRootCause": false,
+      "supportedBy": ["user-report"],
+      "contradictedBy": ["action-scope", "auth-review"]
+    },
+    {
+      "id": "internal-it",
+      "label": "The caller was a legitimate internal technician",
+      "isRootCause": false,
+      "supportedBy": ["user-report"],
+      "contradictedBy": ["call-metadata", "known-channel"]
+    }
+  ],
+  "actions": [
+    {
+      "id": "stop-contact",
+      "label": "Tell Avery to remain disconnected from the caller and deny any unexpected authentication prompt",
+      "intent": "communicate",
+      "phase": "triage",
+      "moveCost": 0,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"safety": 18, "communication": 6, "efficiency": 5},
+      "immediateFeedback": "You stop the active social interaction without asking Avery to destroy messages or repeat suspicious instructions.",
+      "coachHint": "End the adversary-controlled channel first; use the approved channel for everything that follows."
+    },
+    {
+      "id": "ask-user-actions",
+      "label": "Ask exactly what Avery clicked, entered, approved, downloaded, installed, or ran",
+      "intent": "ask",
+      "phase": "triage",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": ["action-scope"],
+      "scoreEffects": {"scope": 18, "information": 14, "evidence": 6},
+      "immediateFeedback": "Avery reports taking none of the requested account or endpoint actions.",
+      "coachHint": "User-action scope determines whether you are handling an attempt, possible exposure, or likely compromise."
+    },
+    {
+      "id": "preserve-email",
+      "label": "Preserve and review the supplied message metadata without opening links or attachments",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": ["message-metadata"],
+      "scoreEffects": {"information": 10, "evidence": 8, "safety": 4},
+      "immediateFeedback": "The timing and diversity of subscription confirmations are consistent with deliberate email bombing.",
+      "coachHint": "Preserve artifacts while avoiding attacker-controlled interaction."
+    },
+    {
+      "id": "review-caller",
+      "label": "Compare the caller's account with the approved internal support directory",
+      "intent": "test",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": ["call-metadata"],
+      "scoreEffects": {"information": 14, "evidence": 8},
+      "immediateFeedback": "The caller was an external guest account, not an approved technician.",
+      "coachHint": "A familiar display name is not a trusted identity."
+    },
+    {
+      "id": "review-auth",
+      "label": "Review the supplied authentication and account-change evidence",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["action-scope"],
+      "revealsEvidenceIds": ["auth-review"],
+      "scoreEffects": {"information": 12, "evidence": 10},
+      "immediateFeedback": "One unexpected prompt was denied; the supplied window shows no successful unfamiliar sign-in or account change.",
+      "coachHint": "This bounds current evidence. It does not prove no hidden activity exists outside the supplied telemetry."
+    },
+    {
+      "id": "check-playbook",
+      "label": "Open the approved impersonation and unexpected-MFA playbook",
+      "intent": "observe",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": ["known-channel"],
+      "scoreEffects": {"authorization": 10, "closure": 5, "efficiency": 4},
+      "immediateFeedback": "The playbook confirms the known escalation route and the service desk's stopping boundary.",
+      "coachHint": "Real incident handling is governed by scope and playbooks, not only technical instinct."
+    },
+    {
+      "id": "join-remote-session",
+      "label": "Join the caller's remote-support session to see what they are trying to do",
+      "intent": "test",
+      "phase": "investigate",
+      "moveCost": 2,
+      "disruptionCost": 5,
+      "authorization": "prohibited",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"safety": -30, "authorization": -25, "efficiency": -12},
+      "immediateFeedback": "You re-entered an attacker-controlled channel and created unnecessary exposure. This is not an authorized investigation method.",
+      "coachHint": "Do not interact with suspected adversary infrastructure to satisfy curiosity."
+    },
+    {
+      "id": "ask-repeat-command",
+      "label": "Ask Avery to repeat or paste any command the caller mentioned",
+      "intent": "ask",
+      "phase": "investigate",
+      "moveCost": 1,
+      "disruptionCost": 2,
+      "authorization": "prohibited",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"safety": -20, "authorization": -12},
+      "immediateFeedback": "The case does not require reproducing attacker instructions, and the product intentionally does not expose executable malicious commands.",
+      "coachHint": "Collect safe metadata and reported action scope; do not operationalize suspicious instructions."
+    },
+    {
+      "id": "promise-safe",
+      "label": "Tell Avery the account is definitely safe because the prompt was denied",
+      "intent": "communicate",
+      "phase": "triage",
+      "moveCost": 0,
+      "disruptionCost": 0,
+      "authorization": "allowed",
+      "requiresEvidenceIds": ["user-report"],
+      "revealsEvidenceIds": [],
+      "scoreEffects": {"communication": -20, "evidence": -14, "closure": -8},
+      "immediateFeedback": "The statement exceeds current evidence. Denying the prompt is protective, but a security review is still required.",
+      "coachHint": "Report what is known, what is not known, and who owns the next investigation step."
+    }
+  ],
+  "decision": {
+    "prompt": "How should the event be classified from the available evidence?",
+    "options": [
+      {
+        "id": "decide-attempt",
+        "label": "A coordinated email-bombing and support-impersonation attempt; no compromise is yet confirmed",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["action-scope", "message-metadata", "call-metadata", "auth-review"],
+        "scoreEffects": {"evidence": 20, "communication": 6},
+        "feedback": "This classification captures the malicious pattern while preserving the distinction between attempted access and confirmed compromise."
+      },
+      {
+        "id": "decide-compromise",
+        "label": "Confirmed full account and endpoint compromise",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"evidence": -18, "communication": -12},
+        "feedback": "The supplied evidence does not show approved prompts, credential disclosure, executed commands, installation, or successful unfamiliar access."
+      },
+      {
+        "id": "decide-spam",
+        "label": "Ordinary spam with no security relevance",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"evidence": -22, "safety": -12},
+        "feedback": "The timing, impersonation call, and unexpected authentication prompt indicate a coordinated attempt."
+      }
+    ]
+  },
+  "resolution": {
+    "prompt": "What is the correct service-desk action?",
+    "options": [
+      {
+        "id": "escalate-known-channel",
+        "label": "Preserve the metadata and escalate through the directory-listed security channel with precise knowns, unknowns, and user actions",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["known-channel", "auth-review"],
+        "scoreEffects": {"authorization": 16, "closure": 18, "communication": 10},
+        "feedback": "The handoff follows policy and gives security the evidence needed for continued investigation."
+      },
+      {
+        "id": "self-investigate-tenant",
+        "label": "Begin searching all tenant logs and blocking accounts without escalation",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"authorization": -22, "safety": -10},
+        "feedback": "Those actions exceed the service-desk role and the supplied scope."
+      },
+      {
+        "id": "close-no-click",
+        "label": "Close the ticket because Avery reports not clicking anything",
+        "isCorrect": false,
+        "requiresEvidenceIds": ["action-scope"],
+        "scoreEffects": {"closure": -20, "safety": -10},
+        "feedback": "The coordinated attempt and unexpected MFA event still require security ownership."
+      }
+    ]
+  },
+  "verification": {
+    "prompt": "What does the service desk verify before handing off?",
+    "options": [
+      {
+        "id": "verify-immediate-state",
+        "label": "Confirm Avery is disconnected from the impersonator, knows the approved support route, and has no new unexpected MFA prompt; record security as the investigation owner",
+        "isCorrect": true,
+        "requiresEvidenceIds": ["known-channel"],
+        "scoreEffects": {"verification": 18, "closure": 8},
+        "feedback": "This verifies the immediate protective state and ownership without falsely closing the larger incident."
+      },
+      {
+        "id": "verify-delete-email",
+        "label": "Have Avery permanently delete all messages before security reviews them",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"verification": -14, "safety": -12},
+        "feedback": "Destroying evidence is not verification and can hinder investigation."
+      },
+      {
+        "id": "verify-no-breach",
+        "label": "Certify that no breach occurred anywhere in the organization",
+        "isCorrect": false,
+        "requiresEvidenceIds": [],
+        "scoreEffects": {"verification": -22, "communication": -15},
+        "feedback": "The service desk does not have the scope or evidence for that organization-wide claim."
+      }
+    ]
+  },
+  "communication": {
+    "prompt": "Build the escalation note from evidence-bound statements.",
+    "requiredMessageParts": ["msg-pattern", "msg-user-actions", "msg-auth", "msg-owner"],
+    "availableMessageParts": [
+      {"id": "msg-pattern", "text": "High-volume subscription email was followed by an external guest account impersonating internal IT.", "category": "evidence"},
+      {"id": "msg-user-actions", "text": "The user reports no password disclosure, approval, link use, attachment use, installation, or command execution.", "category": "scope"},
+      {"id": "msg-auth", "text": "One unexpected MFA request was denied; no successful unfamiliar sign-in appears in the supplied review window.", "category": "evidence"},
+      {"id": "msg-owner", "text": "Security owns continued investigation through the approved incident queue; the service desk verified the user ended contact.", "category": "closure"},
+      {"id": "msg-unsupported", "text": "The attacker was completely defeated and no compromise exists anywhere.", "category": "unsupported"}
+    ]
+  },
+  "debrief": {
+    "rootCauseExplanation": "The subscription flood, external support impersonation, and unexpected authentication request form a coordinated social-engineering attempt intended to gain account access. Avery stopped before approving, disclosing, installing, clicking, or executing anything, so the supplied evidence does not confirm compromise. Security must continue the bounded investigation.",
+    "bestPathActionIds": ["stop-contact", "ask-user-actions", "preserve-email", "review-caller", "review-auth", "check-playbook"],
+    "teachingPoints": [
+      "A flood of legitimate-looking messages can be part of a malicious distraction pattern.",
+      "The most important early scope question is what the user actually did.",
+      "Display names and unsolicited support calls are not identity proof.",
+      "Attempted access and confirmed compromise require different language and response scope.",
+      "A correct handoff identifies evidence, unknowns, immediate safety state, and the next owner."
+    ],
+    "falseAssuranceWarnings": [
+      "A denied MFA prompt does not prove no other access occurred.",
+      "A user reporting no click does not eliminate all security relevance.",
+      "The service desk's safe handoff is not the same as organization-wide incident closure."
+    ]
+  },
+  "scoring": {
+    "startingScore": 50,
+    "minimumScore": 0,
+    "dimensions": [
+      {"id": "scope", "label": "Scope", "weight": 10},
+      {"id": "authorization", "label": "Authorization", "weight": 15},
+      {"id": "safety", "label": "Safety", "weight": 15},
+      {"id": "information", "label": "Information gain", "weight": 15},
+      {"id": "efficiency", "label": "Efficiency", "weight": 10},
+      {"id": "evidence", "label": "Evidence reasoning", "weight": 15},
+      {"id": "communication", "label": "Communication", "weight": 5},
+      {"id": "verification", "label": "Verification", "weight": 10},
+      {"id": "closure", "label": "Closure", "weight": 5}
+    ],
+    "rankBands": [
+      {"minimum": 90, "label": "Incident Navigator"},
+      {"minimum": 75, "label": "Evidence-Bound Responder"},
+      {"minimum": 60, "label": "Developing Triage Analyst"},
+      {"minimum": 0, "label": "Review the Handoff"}
+    ]
+  }
+}

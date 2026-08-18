@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/incident-shift/scenario.schema.json",
+  "title": "Incident Shift deterministic scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactFamily",
+    "unscored",
+    "id",
+    "version",
+    "title",
+    "track",
+    "difficulty",
+    "estimatedMinutes",
+    "stability",
+    "contentReview",
+    "playerRole",
+    "authorityScope",
+    "learningObjectives",
+    "briefing",
+    "evidence",
+    "hypotheses",
+    "actions",
+    "decision",
+    "resolution",
+    "verification",
+    "debrief",
+    "scoring"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.1" },
+    "artifactFamily": { "enum": ["device-flow", "connection-path", "sign-in-timeline", "email-call-timeline"] },
+    "unscored": { "type": "boolean" },
+    "id": { "type": "string", "pattern": "^[A-Z]{2,4}-[0-9]{3}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 4, "maxLength": 80 },
+    "subtitle": { "type": "string", "maxLength": 140 },
+    "track": { "enum": ["service-desk", "network-operations", "security-operations"] },
+    "difficulty": { "enum": ["rookie", "technician", "analyst"] },
+    "estimatedMinutes": { "type": "integer", "minimum": 3, "maximum": 15 },
+    "stability": { "enum": ["evergreen", "review-annually", "review-quarterly"] },
+    "contentReview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lastReviewed", "reviewBy", "sourceUrls"],
+      "properties": {
+        "lastReviewed": { "type": "string", "format": "date" },
+        "reviewBy": { "type": "string", "format": "date" },
+        "sourceUrls": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "format": "uri" },
+          "uniqueItems": true
+        },
+        "reviewNotes": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "playerRole": { "type": "string", "minLength": 4, "maxLength": 120 },
+    "authorityScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "requiresEscalation", "prohibited"],
+      "properties": {
+        "allowed": { "$ref": "#/$defs/stringList" },
+        "requiresEscalation": { "$ref": "#/$defs/stringList" },
+        "prohibited": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "learningObjectives": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 6,
+      "items": { "type": "string", "minLength": 8, "maxLength": 180 },
+      "uniqueItems": true
+    },
+    "briefing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timestamp", "channel", "requester", "summary", "initialEvidenceIds"],
+      "properties": {
+        "timestamp": { "type": "string" },
+        "channel": { "enum": ["ticket", "alert", "chat", "phone", "email"] },
+        "requester": { "type": "string", "maxLength": 80 },
+        "summary": { "type": "string", "minLength": 20, "maxLength": 800 },
+        "initialEvidenceIds": { "$ref": "#/$defs/idList" }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/evidence" }
+    },
+    "hypotheses": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": { "$ref": "#/$defs/hypothesis" }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 20,
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "decision": { "$ref": "#/$defs/choiceStage" },
+    "resolution": { "$ref": "#/$defs/choiceStage" },
+    "verification": { "$ref": "#/$defs/choiceStage" },
+    "communication": { "$ref": "#/$defs/communication" },
+    "debrief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootCauseExplanation", "bestPathActionIds", "teachingPoints", "falseAssuranceWarnings"],
+      "properties": {
+        "rootCauseExplanation": { "type": "string", "minLength": 20, "maxLength": 1200 },
+        "bestPathActionIds": { "$ref": "#/$defs/idList" },
+        "teachingPoints": { "$ref": "#/$defs/stringList" },
+        "falseAssuranceWarnings": { "$ref": "#/$defs/stringList" }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startingScore", "minimumScore", "dimensions", "rankBands"],
+      "properties": {
+        "startingScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "minimumScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "dimensions": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "weight"],
+            "properties": {
+              "id": { "enum": ["scope", "authorization", "safety", "information", "efficiency", "evidence", "communication", "verification", "closure"] },
+              "label": { "type": "string" },
+              "weight": { "type": "integer", "minimum": 1, "maximum": 40 }
+            }
+          }
+        },
+        "rankBands": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["minimum", "label"],
+            "properties": {
+              "minimum": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "label": { "type": "string", "maxLength": 50 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "idList": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+      "uniqueItems": true
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "type", "provenance", "content"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "label": { "type": "string", "maxLength": 80 },
+        "type": { "enum": ["user-report", "observation", "command-output", "log", "email", "chat", "policy", "diagram", "timeline"] },
+        "provenance": { "enum": ["reported", "observed", "system-generated", "policy-defined"] },
+        "content": { "type": "string", "maxLength": 3000 },
+        "coachExplanation": { "type": "string", "maxLength": 600 }
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "isRootCause", "supportedBy", "contradictedBy"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "label": { "type": "string", "maxLength": 120 },
+        "isRootCause": { "type": "boolean" },
+        "supportedBy": { "$ref": "#/$defs/idList" },
+        "contradictedBy": { "$ref": "#/$defs/idList" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "intent", "phase", "moveCost", "disruptionCost", "authorization", "requiresEvidenceIds", "revealsEvidenceIds", "scoreEffects", "immediateFeedback"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "label": { "type": "string", "minLength": 4, "maxLength": 160 },
+        "intent": { "enum": ["ask", "observe", "test", "change", "escalate", "communicate", "verify"] },
+        "phase": { "enum": ["triage", "investigate", "resolve", "verify"] },
+        "moveCost": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "disruptionCost": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "authorization": { "enum": ["allowed", "requires-escalation", "prohibited"] },
+        "requiresEvidenceIds": { "$ref": "#/$defs/idList" },
+        "revealsEvidenceIds": { "$ref": "#/$defs/idList" },
+        "scoreEffects": {
+          "type": "object",
+          "propertyNames": { "enum": ["scope", "authorization", "safety", "information", "efficiency", "evidence", "communication", "verification", "closure"] },
+          "additionalProperties": { "type": "integer", "minimum": -30, "maximum": 30 }
+        },
+        "immediateFeedback": { "type": "string", "maxLength": 600 },
+        "coachHint": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "choiceStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "options"],
+      "properties": {
+        "prompt": { "type": "string", "minLength": 10, "maxLength": 300 },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "isCorrect", "scoreEffects", "feedback"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "label": { "type": "string", "minLength": 4, "maxLength": 300 },
+              "isCorrect": { "type": "boolean" },
+              "requiresEvidenceIds": { "$ref": "#/$defs/idList" },
+              "scoreEffects": {
+                "type": "object",
+                "propertyNames": { "enum": ["scope", "authorization", "safety", "information", "efficiency", "evidence", "communication", "verification", "closure"] },
+                "additionalProperties": { "type": "integer", "minimum": -30, "maximum": 30 }
+              },
+              "feedback": { "type": "string", "maxLength": 800 }
+            }
+          }
+        }
+      }
+    },
+    "communication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "requiredMessageParts", "availableMessageParts"],
+      "properties": {
+        "prompt": { "type": "string", "maxLength": 300 },
+        "requiredMessageParts": { "$ref": "#/$defs/idList" },
+        "availableMessageParts": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "text", "category"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+              "text": { "type": "string", "maxLength": 400 },
+              "category": { "enum": ["scope", "evidence", "certainty", "action", "verification", "closure", "unsupported"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}
