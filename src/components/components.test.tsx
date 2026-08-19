@@ -24,6 +24,12 @@ describe('case interface', () => {
     expect(screen.getByText(/More tests/)).toBeInTheDocument()
   })
 
+  it('normalizes a trailing slash on a direct static route', () => {
+    window.history.replaceState({}, '', '/settings/')
+    render(<App />)
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument()
+  })
+
   it('requires a deliberate impact confirmation and returns focus on cancel', async () => {
     const user = userEvent.setup()
     const scenario = scenarioById.get('TRAIN-001')!

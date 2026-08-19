@@ -11,8 +11,10 @@ import type { EvidenceRelation, Scenario } from './engine/validation'
 const deploymentBase = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 function appPath(pathname: string) {
-  if (!deploymentBase || !pathname.startsWith(`${deploymentBase}/`)) return pathname
-  return pathname.slice(deploymentBase.length) || '/'
+  let path = pathname
+  if (deploymentBase && pathname === deploymentBase) path = '/'
+  else if (deploymentBase && pathname.startsWith(`${deploymentBase}/`)) path = pathname.slice(deploymentBase.length) || '/'
+  return path.length > 1 ? path.replace(/\/+$/, '') : path
 }
 
 function browserPath(path: string) {
