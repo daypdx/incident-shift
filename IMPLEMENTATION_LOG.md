@@ -79,3 +79,14 @@ secret pattern scan       PASS — no credential-pattern matches in handoff sour
 ```
 
 Generated dependency folders are ignored. No archive was created.
+
+## Post-deployment QA repair — 2026-08-18
+
+- Added stage-aware resume routing and confirmed restart behavior without rewriting saved event logs.
+- Converted the mobile Actions surface into a focus-contained, Escape-dismissible modal sheet while preserving the desktop complementary panel.
+- Replaced authored pre-debrief hypothesis strength with player-derived reasoning labels.
+- Added editable/removable evidence relationships whose revisions remain in the immutable event history while scoring uses the current derived link.
+- Added a first-time Daily Incident gate, neutral pre-submit communication labels, honest replay choices, operational Case File controls, training-specific debrief copy, readable mobile navigation, and a bounded removal of the unused Sound setting.
+- Added reviewed classification feedback, scenario teaching points, score-ledger detail, a next-behavior recommendation, private recent-dimension trends, Coach/Independent comparison, repeat-attempt deltas, and a recommended drill.
+- Kept the benefit-first hero challenger documented in the QA handoff rather than adding analytics or an unapproved traffic allocator.
+- This repair pass is intentionally local and uncommitted. It does not change the published GitHub Pages build.

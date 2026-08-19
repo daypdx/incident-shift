@@ -26,7 +26,7 @@ export async function acceptCase(page: Page, id: string, mode: 'Coach' | 'Indepe
   await page.goto(`/case/${id}/briefing`)
   if (mode === 'Independent') await page.getByLabel('Independent').check()
   await page.getByRole('button', { name: /Accept case|Restart case/ }).click()
-  await page.getByRole('heading', { name: 'What is your next test?' }).waitFor()
+  await page.locator('#case-workspace').waitFor()
 }
 
 export async function takeAction(page: Page, data: ScenarioData, actionId: string, confirm = false) {
@@ -40,7 +40,7 @@ export async function takeAction(page: Page, data: ScenarioData, actionId: strin
     if (await more.isVisible()) await more.click()
   }
   await card.getByRole('button', { name: 'Take action' }).click()
-  const dialog = page.getByRole('dialog')
+  const dialog = page.locator('dialog.impact-dialog')
   if (await dialog.isVisible().catch(() => false)) {
     if (!confirm) throw new Error(`Action ${actionId} unexpectedly requires confirmation`)
     await dialog.getByRole('button', { name: 'Take action anyway' }).click()

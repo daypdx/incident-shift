@@ -1,5 +1,5 @@
 import { replay, type AttemptEvent, type AttemptState, type Mode, type ScoreResult } from './engine'
-import type { Scenario } from './validation'
+import type { DimensionId, Scenario } from './validation'
 
 const SETTINGS_KEY = 'incident-shift.settings.v1'
 const PROGRESS_KEY = 'incident-shift.progress.v1'
@@ -9,7 +9,6 @@ export interface Settings {
   defaultMode: Mode
   reducedMotion: boolean
   highContrast: boolean
-  sound: boolean
 }
 
 export interface CompletedAttempt {
@@ -19,6 +18,9 @@ export interface CompletedAttempt {
   score: number | null
   rank: string
   badges: string[]
+  dimensions?: Partial<Record<DimensionId, number>>
+  moves?: number
+  disruption?: number
 }
 
 export interface Progress {
@@ -26,7 +28,7 @@ export interface Progress {
   completed: Record<string, { coach: boolean; independent: boolean }>
 }
 
-const defaultSettings: Settings = { defaultMode: 'coach', reducedMotion: false, highContrast: false, sound: false }
+const defaultSettings: Settings = { defaultMode: 'coach', reducedMotion: false, highContrast: false }
 const defaultProgress: Progress = { trainingComplete: false, completed: {} }
 
 function parse<T>(key: string, fallback: T): T {
@@ -47,7 +49,14 @@ function save(key: string, value: unknown): boolean {
   }
 }
 
-export const loadSettings = () => parse<Settings>(SETTINGS_KEY, defaultSettings)
+export const loadSettings = () => {
+  const stored = parse<Partial<Settings>>(SETTINGS_KEY, defaultSettings)
+  return {
+    defaultMode: stored.defaultMode === 'independent' ? 'independent' : 'coach',
+    reducedMotion: Boolean(stored.reducedMotion),
+    highContrast: Boolean(stored.highContrast),
+  } satisfies Settings
+}
 export const saveSettings = (settings: Settings) => save(SETTINGS_KEY, settings)
 export const loadProgress = () => parse<Progress>(PROGRESS_KEY, defaultProgress)
 export const loadHistory = () => parse<CompletedAttempt[]>(HISTORY_KEY, [])
@@ -77,7 +86,7 @@ export function recordCompletion(scenario: Scenario, state: AttemptState, score:
   progress.completed[scenario.id][state.mode] = true
   save(PROGRESS_KEY, progress)
   const history = loadHistory()
-  history.push({ scenarioId: scenario.id, mode: state.mode, completedAt: state.events.at(-1)?.at ?? new Date().toISOString(), score: scenario.unscored ? null : score.finalScore, rank: score.rank, badges })
+  history.push({ scenarioId: scenario.id, mode: state.mode, completedAt: state.events.at(-1)?.at ?? new Date().toISOString(), score: scenario.unscored ? null : score.finalScore, rank: score.rank, badges, dimensions: score.dimensions, moves: state.moves, disruption: state.disruption })
   save(HISTORY_KEY, history)
 }
 

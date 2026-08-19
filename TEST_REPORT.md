@@ -25,6 +25,11 @@ Target: local Vite application
 - exact LocalStorage attempt restore and incompatible migration rejection
 - deterministic Daily Incident selection
 - evidence provenance, pre-debrief answer-hiding, action-density, impact confirmation, and focus return components
+- stage-to-route resume mapping for briefing, investigate, resolve, verify, communicate, and debrief
+- classification revision/removal replay with final-relation scoring
+- player-derived hypothesis states with no authored Independent-mode labels
+- identical deterministic evidence and scoring across Coach and Independent modes
+- retired-setting normalization and private progress-dimension persistence
 
 ### Playwright flows
 
@@ -41,6 +46,16 @@ Target: local Vite application
 11. Mobile actions use a labeled, closable full-height sheet.
 12. Critical briefing controls remain available at 200% browser zoom.
 13. Visual-QA capture test produces all required screenshot artifacts.
+14. Exit and Resume preserve the byte-identical saved attempt.
+15. Restart requires confirmation; cancellation preserves and confirmation replaces the event log.
+16. Resolve, Verify, and Communicate resume at their exact routes.
+17. Independent ID and SOC cases expose no authored hypothesis strength before debrief.
+18. Daily Incident requires training or an explicit bypass.
+19. Evidence links can be revised and removed from the visible ledger.
+20. Evidence and Authority Case File controls produce visible, keyboard-operable state changes.
+21. Mobile Actions traps focus, closes on Escape, restores focus, keeps Close sticky, and makes the background inert at 320×568 and 390×844.
+22. Axe passes with the mobile Actions dialog open.
+23. Reduced-motion and high-contrast preferences persist; no inert Sound control remains.
 
 ## Final results
 
@@ -48,9 +63,9 @@ Target: local Vite application
 Content validation: 4 scenarios passed Zod + semantic checks
 TypeScript: strict project build passed
 ESLint: passed with --max-warnings 0
-Vitest: 5 test files passed, 16 tests passed
+Vitest: 5 test files passed, 22 tests passed
 Vite production build: passed
-Playwright: 12 tests passed
+Playwright: 21 tests passed
 Axe: zero violations on tested major routes
 320px overflow: document scrollWidth <= clientWidth
 Dependency audit: 0 vulnerabilities reported by npm audit
@@ -68,5 +83,6 @@ Reviewed directly for clipping, overlap, contrast, density, focus hierarchy, and
 - 768×1024: briefing, active case
 - 390×844: landing, active evidence, action sheet, verification, debrief
 - 320×568: active case, impact confirmation
+- QA repair captures: 1440×900 landing/active/debrief; 390×844 landing/Actions open; 320×568 landing/Actions open/Actions scrolled to end
 
 All files are in `artifacts/screenshots/`.

@@ -42,3 +42,15 @@ test('impact dialog returns focus to its trigger', async ({ page }) => {
   await page.getByRole('button', { name: 'Go back' }).click()
   await expect(trigger).toBeFocused()
 })
+
+test('mobile Actions dialog is axe-clean while open', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 })
+  await page.goto('/')
+  await page.evaluate(() => localStorage.clear())
+  await acceptCase(page, 'TRAIN-001')
+  await page.getByRole('button', { name: 'Actions', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'What is your next test?' })).toBeVisible()
+  await expectAxeClean(page, 'mobile actions open')
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'What is your next test?' })).toHaveCount(0)
+})
