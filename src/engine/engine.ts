@@ -8,6 +8,7 @@ export type AttemptEvent =
   | { type: 'case.accepted'; at: string; mode: Mode }
   | { type: 'action.taken'; at: string; actionId: string }
   | { type: 'evidence.classified'; at: string; evidenceId: string; hypothesisId: string; relation: EvidenceRelation }
+  | { type: 'evidence.classification-removed'; at: string; evidenceId: string; hypothesisId: string }
   | { type: 'decision.committed'; at: string; optionId: string; confidence: Confidence; verificationPlanOptionId: string }
   | { type: 'resolution.committed'; at: string; optionId: string }
   | { type: 'verification.committed'; at: string; optionId: string }
@@ -109,7 +110,15 @@ function reduceEvent(scenario: Scenario, state: AttemptState, event: AttemptEven
       }
     }
     case 'evidence.classified':
-      return { ...next, classifications: [...state.classifications, { evidenceId: event.evidenceId, hypothesisId: event.hypothesisId, relation: event.relation }] }
+      return {
+        ...next,
+        classifications: [
+          ...state.classifications.filter((item) => item.evidenceId !== event.evidenceId || item.hypothesisId !== event.hypothesisId),
+          { evidenceId: event.evidenceId, hypothesisId: event.hypothesisId, relation: event.relation },
+        ],
+      }
+    case 'evidence.classification-removed':
+      return { ...next, classifications: state.classifications.filter((item) => item.evidenceId !== event.evidenceId || item.hypothesisId !== event.hypothesisId) }
     case 'decision.committed':
       return { ...next, stage: 'resolve', decision: { optionId: event.optionId, confidence: event.confidence, verificationPlanOptionId: event.verificationPlanOptionId } }
     case 'resolution.committed':
@@ -155,8 +164,14 @@ export function classifyEvidence(scenario: Scenario, state: AttemptState, eviden
   assertAttempt(scenario, state)
   if (!state.collectedEvidenceIds.includes(evidenceId)) throw new DomainError('evidence-locked', 'Collect evidence before classifying it.')
   if (!scenario.hypotheses.some((item) => item.id === hypothesisId)) throw new DomainError('unknown-hypothesis', `Unknown hypothesis: ${hypothesisId}`)
-  if (state.classifications.some((item) => item.evidenceId === evidenceId && item.hypothesisId === hypothesisId)) throw new DomainError('duplicate-classification', 'This evidence-to-hypothesis link is already classified.')
+  if (state.classifications.some((item) => item.evidenceId === evidenceId && item.hypothesisId === hypothesisId && item.relation === relation)) return state
   return reduceEvent(scenario, state, { type: 'evidence.classified', at, evidenceId, hypothesisId, relation })
+}
+
+export function removeEvidenceClassification(scenario: Scenario, state: AttemptState, evidenceId: string, hypothesisId: string, at = now()): AttemptState {
+  assertAttempt(scenario, state)
+  if (!state.classifications.some((item) => item.evidenceId === evidenceId && item.hypothesisId === hypothesisId)) throw new DomainError('unknown-classification', 'That evidence relationship is not currently classified.')
+  return reduceEvent(scenario, state, { type: 'evidence.classification-removed', at, evidenceId, hypothesisId })
 }
 
 export function commitDecision(scenario: Scenario, state: AttemptState, optionId: string, confidence: Confidence, verificationPlanOptionId: string, at = now()): AttemptState {
@@ -211,11 +226,41 @@ export function replay(events: AttemptEvent[], scenario: Scenario): AttemptState
   return events.reduce((state, event) => reduceEvent(scenario, state, event), emptyState(scenario, first.mode))
 }
 
+export function routeForAttempt(state: AttemptState) {
+  const screen = state.stage === 'triage' || state.stage === 'investigate' ? 'play' : state.stage
+  return `/case/${state.scenarioId}/${screen}`
+}
+
 export function getHypothesisStates(scenario: Scenario, state: AttemptState) {
   return scenario.hypotheses.map((hypothesis) => {
-    const supported = hypothesis.supportedBy.some((id) => state.collectedEvidenceIds.includes(id))
-    const contradicted = hypothesis.contradictedBy.some((id) => state.collectedEvidenceIds.includes(id))
-    return { hypothesis, state: contradicted ? 'weakened' : supported ? 'supported' : 'plausible' as 'plausible' | 'supported' | 'weakened' }
+    const relations = state.classifications.filter((item) => item.hypothesisId === hypothesis.id).map((item) => item.relation)
+    const supports = relations.includes('supports')
+    const contradicts = relations.includes('contradicts')
+    const playerState = supports && contradicts ? 'Mixed player evidence' : supports ? 'Player supports' : contradicts ? 'Player contradicts' : relations.includes('context') ? 'Player context only' : 'Unclassified'
+    return { hypothesis, state: playerState }
+  })
+}
+
+export function reviewedRelation(scenario: Scenario, evidenceId: string, hypothesisId: string): EvidenceRelation {
+  const hypothesis = scenario.hypotheses.find((item) => item.id === hypothesisId)
+  return hypothesis?.supportedBy.includes(evidenceId) ? 'supports' : hypothesis?.contradictedBy.includes(evidenceId) ? 'contradicts' : 'context'
+}
+
+export function getClassificationReview(scenario: Scenario, state: AttemptState) {
+  return state.classifications.map((classification) => {
+    const reviewed = reviewedRelation(scenario, classification.evidenceId, classification.hypothesisId)
+    const revisions = state.events.filter((event) => event.type === 'evidence.classified' && event.evidenceId === classification.evidenceId && event.hypothesisId === classification.hypothesisId)
+    const explanation = reviewed === 'supports' ? 'The reviewed relationship supports this hypothesis.' : reviewed === 'contradicts' ? 'The reviewed relationship weakens this hypothesis.' : 'The evidence provides context but does not directly prove or weaken this hypothesis.'
+    return { ...classification, reviewed, correct: reviewed === classification.relation, revised: revisions.length > 1, explanation }
+  })
+}
+
+export function hasEvidenceBasedRevision(scenario: Scenario, state: AttemptState) {
+  const classified = state.events.map((event, index) => ({ event, index })).filter((item): item is { event: Extract<AttemptEvent, { type: 'evidence.classified' }>; index: number } => item.event.type === 'evidence.classified')
+  return classified.some(({ event, index }, position) => {
+    const previous = classified.slice(0, position).reverse().find((item) => item.event.evidenceId === event.evidenceId && item.event.hypothesisId === event.hypothesisId && item.event.relation !== event.relation)
+    if (!previous) return false
+    return state.events.slice(previous.index + 1, index).some((between) => between.type === 'action.taken' && (scenario.actions.find((action) => action.id === between.actionId)?.revealsEvidenceIds.length ?? 0) > 0)
   })
 }
 
@@ -231,8 +276,7 @@ export function scoreAttempt(scenario: Scenario, state: AttemptState): ScoreResu
     if (action) applyEffects(ledger, action.label, action.scoreEffects)
   }
   for (const classification of state.classifications) {
-    const hypothesis = scenario.hypotheses.find((item) => item.id === classification.hypothesisId)
-    const expected: EvidenceRelation = hypothesis?.supportedBy.includes(classification.evidenceId) ? 'supports' : hypothesis?.contradictedBy.includes(classification.evidenceId) ? 'contradicts' : 'context'
+    const expected = reviewedRelation(scenario, classification.evidenceId, classification.hypothesisId)
     ledger.push({ source: `Evidence classification: ${classification.evidenceId}`, dimension: 'evidence', amount: expected === classification.relation ? 5 : -4 })
   }
   const decision = scenario.decision.options.find((item) => item.id === state.decision?.optionId)

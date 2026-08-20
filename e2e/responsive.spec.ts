@@ -6,17 +6,48 @@ async function expectNoPageOverflow(page: import('@playwright/test').Page) {
   expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth)
 }
 
-test('has no page-level horizontal scroll at 320px and uses an action sheet', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 568 })
-  await page.goto('/')
-  await expectNoPageOverflow(page)
-  await acceptCase(page, scenario('TRAIN-001').id)
-  await expectNoPageOverflow(page)
-  await expect(page.locator('.action-drawer')).not.toBeInViewport()
-  await page.getByRole('button', { name: 'Actions', exact: true }).click()
-  await expect(page.locator('.action-drawer')).toBeInViewport()
-  await expect(page.getByRole('button', { name: 'Close actions' })).toBeVisible()
-  await expectNoPageOverflow(page)
+test('mobile action sheet traps focus, closes safely, and preserves layout', async ({ page }) => {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+    await page.evaluate(() => localStorage.clear())
+    await expectNoPageOverflow(page)
+    if (viewport.width === 320) {
+      const cta = await page.getByRole('button', { name: /Start Training Shift/ }).boundingBox()
+      expect(cta!.y + cta!.height).toBeLessThanOrEqual(viewport.height)
+      await expect(page.locator('.global-header nav')).toContainText('Shifts')
+      await expect(page.locator('.global-header nav')).toContainText('Settings')
+    }
+    await acceptCase(page, scenario('TRAIN-001').id)
+    await expectNoPageOverflow(page)
+    const drawer = page.locator('.action-drawer')
+    const trigger = page.getByRole('button', { name: 'Actions', exact: true })
+    await expect(drawer).not.toBeInViewport()
+    if (viewport.width === 320) await trigger.press('Enter')
+    else await trigger.click()
+    await expect(drawer).toBeInViewport()
+    const close = page.getByRole('button', { name: 'Close actions' })
+    await expect(close).toBeFocused()
+    expect(await page.locator('.workspace').evaluate((element) => (element as HTMLElement).inert)).toBe(true)
+    for (let index = 0; index < 12; index += 1) {
+      await page.keyboard.press('Tab')
+      expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.action-drawer')))).toBe(true)
+    }
+    await page.keyboard.press('Shift+Tab')
+    expect(await page.evaluate(() => Boolean(document.activeElement?.closest('.action-drawer')))).toBe(true)
+    await drawer.evaluate((element) => { element.scrollTop = element.scrollHeight })
+    const closeBox = await close.boundingBox()
+    const drawerBox = await drawer.boundingBox()
+    const navBox = await page.locator('.mobile-case-nav').boundingBox()
+    expect(closeBox!.y).toBeGreaterThanOrEqual(drawerBox!.y)
+    await expect(close).toBeInViewport()
+    expect(drawerBox!.y + drawerBox!.height).toBeLessThanOrEqual(navBox!.y + 1)
+    await page.keyboard.press('Escape')
+    await expect(drawer).not.toBeInViewport()
+    await expect(trigger).toBeFocused()
+    expect(await page.locator('.workspace').evaluate((element) => (element as HTMLElement).inert)).toBe(false)
+    await expectNoPageOverflow(page)
+  }
 })
 
 test('preserves controls at 200% browser zoom', async ({ page }) => {

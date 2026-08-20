@@ -2,7 +2,7 @@
 
 ## Local-only data
 
-Incident Shift has no backend, account, analytics SDK, advertising SDK, telemetry endpoint, or runtime AI. The prototype stores only local settings, immutable scenario-event logs, scores, mode completion, badges, and timestamps in browser LocalStorage.
+Incident Shift has no backend, account, analytics SDK, advertising SDK, telemetry endpoint, or runtime AI. The prototype stores only local settings, immutable scenario-event logs, scores and score dimensions, move/disruption summaries, mode completion, badges, and timestamps in browser LocalStorage.
 
 It does not require or collect:
 
